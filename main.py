@@ -11,20 +11,28 @@ def retrieveKey(self, latestKeyPressRetriever):
     latestKeyPressRetriever["keyJustPressed"] = True
 
 
-# Make sure input is 0-9, x, X, /, (R to reset)
+# Make sure input is 0-9, x, X, /, (R to restart)
 def validateKeyPress(latestKeyPress):
     if(latestKeyPress.isdigit() or 
        latestKeyPress == "X" or 
        latestKeyPress == "x" or 
        latestKeyPress == "/" or
-       latestKeyPress == "R"):
+       latestKeyPress == "r"):
         return True
     else: 
         return False
 
 
+# Get the frame number for the current shot
+def getFrameNumber(nextShotNumber):
+    if(nextShotNumber > 19):
+        return 10
+    else:
+        return math.ceil(nextShotNumber / 2)
+
 # Update the current shot in the current frame
-def updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
+def updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber):
+    frameNumber = getFrameNumber(nextShotNumber)
     if(frameNumber == 10):
         if(nextShotNumber == 19):
             entireScoreBoard[str(frameNumber)][0] = updateFrameString(entireScoreBoard[str(frameNumber)][0], currentShotScore, 0)
@@ -41,26 +49,45 @@ def updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNum
 
 # Update the string for the score at the given index
 def updateFrameString(oldScoreString, newValue, newValueIndex):
-    print(oldScoreString)
     tempString = list(oldScoreString)
     tempString[newValueIndex] = newValue
     newString = "".join(tempString)
-    print(newString)
     return newString
+
+
+# Update the total score
+def updateTotalScore(currentShotScore, entireScoreBoard, nextShotNumber):
+    frameNumber = getFrameNumber(nextShotNumber)
+    if(frameNumber > 1):
+        priorTotalScore = entireScoreBoard[str(frameNumber-1)][1]
+    else:
+        priorTotalScore = 0
+
+    currentTotalScore = int(currentShotScore) + int(priorTotalScore)
+    
+    entireScoreBoard[str(frameNumber)][1] = currentTotalScore
 
 
 # Add next shot taken onto the scoreboard in the latest shot position
 def updateScoreBoard(currentShotScore, entireScoreBoard, nextShotNumber):
-    if(nextShotNumber > 19):
-        frameNumber = 10
-    else:
-        frameNumber = math.ceil(nextShotNumber / 2)
     
-    updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber)
+    updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber)
 
-    #calculate new score
+    updateTotalScore(currentShotScore, entireScoreBoard, nextShotNumber)
 
-
+# Check if the game should be restarted
+def shouldRestart(lastKeyPress):
+    if(lastKeyPress == "r"):
+        return True
+    else:
+        return False
+    
+# Reset all game variables
+def restartGame():
+    newScoreBoard = {"1": [" | ", " "], "2": [" | ", " "], "3": [" | ", " "], "4": [" | ", " "], "5": [" | ", " "], "6": [" | ", " "], "7": [" | ", " "], "8": [" | ", " "], "9": [" | ", " "], "10": [" | | ", " "]}
+    newNextShotNumber = 1
+    newCurrentTotalScore = 0
+    return newScoreBoard, newNextShotNumber, newCurrentTotalScore
 
 
 # Clears the previous board and displays the updated one
@@ -85,9 +112,13 @@ def main():
         # Check if key has been pressed, only update the board if input is valid
         if(latestKeyPressRetriever["keyJustPressed"]):
             if(validateKeyPress(latestKeyPressRetriever["keyPressName"])):
-                updateScoreBoard(latestKeyPressRetriever["keyPressName"], entireScoreBoard, nextShotNumber)
-                nextShotNumber+=1
-                displayBoard(entireScoreBoard)
+                if(shouldRestart(latestKeyPressRetriever["keyPressName"])):
+                    entireScoreBoard, nextShotNumber, currentTotalScore = restartGame()
+                    displayBoard(entireScoreBoard)
+                else:
+                    updateScoreBoard(latestKeyPressRetriever["keyPressName"], entireScoreBoard, nextShotNumber)
+                    nextShotNumber+=1
+                    displayBoard(entireScoreBoard)
             
             latestKeyPressRetriever["keyJustPressed"] = False
         time.sleep(0.01) # No reason to run the while loop as fast as possible
