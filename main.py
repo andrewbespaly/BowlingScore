@@ -13,14 +13,14 @@ def retrieveKey(self, latestKeyPressRetriever):
 
 # Make sure input is 0-9, x, X, /, (R to restart)
 def validateKeyPress(latestKeyPress):
+    latestKeyPress = latestKeyPress.upper()
     if(latestKeyPress.isdigit() or 
-       latestKeyPress == "X" or 
-       latestKeyPress == "x" or 
-       latestKeyPress == "/" or
-       latestKeyPress == "r"):
-        return True
+        latestKeyPress == "X" or 
+        latestKeyPress == "/" or
+        latestKeyPress == "R"):
+        return latestKeyPress
     else: 
-        return False
+        return None
 
 
 # Get the frame number for the current shot
@@ -31,20 +31,19 @@ def getFrameNumber(nextShotNumber):
         return math.ceil(nextShotNumber / 2)
 
 # Update the current shot in the current frame
-def updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber):
-    frameNumber = getFrameNumber(nextShotNumber)
+def updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
     if(frameNumber == 10):
         if(nextShotNumber == 19):
-            entireScoreBoard[str(frameNumber)][0] = updateFrameString(entireScoreBoard[str(frameNumber)][0], currentShotScore, 0)
+            entireScoreBoard[frameNumber][0] = updateFrameString(entireScoreBoard[frameNumber][0], currentShotScore, 0)
         elif(nextShotNumber == 20):
-            entireScoreBoard[str(frameNumber)][0] = updateFrameString(entireScoreBoard[str(frameNumber)][0], currentShotScore, 2)
+            entireScoreBoard[frameNumber][0] = updateFrameString(entireScoreBoard[frameNumber][0], currentShotScore, 2)
         elif(nextShotNumber == 21):
-            entireScoreBoard[str(frameNumber)][0] = updateFrameString(entireScoreBoard[str(frameNumber)][0], currentShotScore, -1)
+            entireScoreBoard[frameNumber][0] = updateFrameString(entireScoreBoard[frameNumber][0], currentShotScore, -1)
     else:
         if(nextShotNumber % 2 == 1):
-            entireScoreBoard[str(frameNumber)][0] = updateFrameString(entireScoreBoard[str(frameNumber)][0], currentShotScore, 0)
+            entireScoreBoard[frameNumber][0] = updateFrameString(entireScoreBoard[frameNumber][0], currentShotScore, 0)
         else:
-            entireScoreBoard[str(frameNumber)][0] = updateFrameString(entireScoreBoard[str(frameNumber)][0], currentShotScore, -1)
+            entireScoreBoard[frameNumber][0] = updateFrameString(entireScoreBoard[frameNumber][0], currentShotScore, -1)
 
 
 # Update the string for the score at the given index
@@ -55,46 +54,71 @@ def updateFrameString(oldScoreString, newValue, newValueIndex):
     return newString
 
 
-# Update the total score
-def updateTotalScore(currentShotScore, entireScoreBoard, nextShotNumber):
-    frameNumber = getFrameNumber(nextShotNumber)
+# Add previous frame score to current frame
+def updateCurrentFrameScore(entireScoreBoard, frameNumber):
     if(frameNumber > 1):
-        priorTotalScore = entireScoreBoard[str(frameNumber-1)][1]
+        priorTotalScore = entireScoreBoard[frameNumber-1][1]
     else:
         priorTotalScore = 0
 
-    currentTotalScore = int(currentShotScore) + int(priorTotalScore)
+    currentFrameScore = evaluateFrameScore(entireScoreBoard[frameNumber][0])
     
-    entireScoreBoard[str(frameNumber)][1] = currentTotalScore
+    entireScoreBoard[frameNumber][1] = currentFrameScore + priorTotalScore
+
+
+# Evaluate current frame score
+def evaluateFrameScore(frameShotString):
+    firstShot = frameShotString[0]
+    secondShot = frameShotString[-1]
+    if(firstShot == "X"):
+        return 10
+    elif(secondShot == "/"):
+        return 10
+    else:
+        return int(firstShot) + int(secondShot)
+
+
+# Update score after the first shot in the frame
+def firstFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
+    if(currentShotScore == "X"):
+        updateFrameShot("_", entireScoreBoard, nextShotNumber+1, frameNumber)
+        updateCurrentFrameScore(entireScoreBoard, frameNumber)
+    
+
+# Update score after the second shot in the frame
+def secondFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
+    updateCurrentFrameScore(entireScoreBoard, frameNumber)
+    
+
+# Update the total score
+def updateTotalScore(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
+    if(nextShotNumber % 2 == 1):
+        firstFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber)
+    else:
+        secondFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber)
 
 
 # Add next shot taken onto the scoreboard in the latest shot position
 def updateScoreBoard(currentShotScore, entireScoreBoard, nextShotNumber):
+    frameNumber = getFrameNumber(nextShotNumber)
     
-    updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber)
+    updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber)
 
-    updateTotalScore(currentShotScore, entireScoreBoard, nextShotNumber)
+    updateTotalScore(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber)
 
-# Check if the game should be restarted
-def shouldRestart(lastKeyPress):
-    if(lastKeyPress == "r"):
-        return True
-    else:
-        return False
     
 # Reset all game variables
 def restartGame():
-    newScoreBoard = {"1": [" | ", " "], "2": [" | ", " "], "3": [" | ", " "], "4": [" | ", " "], "5": [" | ", " "], "6": [" | ", " "], "7": [" | ", " "], "8": [" | ", " "], "9": [" | ", " "], "10": [" | | ", " "]}
+    newScoreBoard = {1: [" | ", " "], 2: [" | ", " "], 3: [" | ", " "], 4: [" | ", " "], 5: [" | ", " "], 6: [" | ", " "], 7: [" | ", " "], 8: [" | ", " "], 9: [" | ", " "], 10: [" | | ", " "]}
     newNextShotNumber = 1
-    newCurrentTotalScore = 0
-    return newScoreBoard, newNextShotNumber, newCurrentTotalScore
+    return newScoreBoard, newNextShotNumber
 
 
 # Clears the previous board and displays the updated one
 def displayBoard(entireScoreBoard):
     os.system('cls')
     print(tabulate(entireScoreBoard, headers="keys", tablefmt="fancy_grid", stralign="center"))
-    print("\n\t'r' - restart\t\t\t'esc' - quit")
+    print("\n\t'R' - Restart\t\t\t'ESC' - Quit")
 
 
 def main():
@@ -102,26 +126,28 @@ def main():
     latestKeyPressRetriever = {"keyPressName": "", "keyJustPressed": False}
     keyboard.on_press(lambda e: retrieveKey(e, latestKeyPressRetriever))
 
-    entireScoreBoard = {"1": [" | ", " "], "2": [" | ", " "], "3": [" | ", " "], "4": [" | ", " "], "5": [" | ", " "], "6": [" | ", " "], "7": [" | ", " "], "8": [" | ", " "], "9": [" | ", " "], "10": [" | | ", " "]}
+    entireScoreBoard = {1: [" | ", " "], 2: [" | ", " "], 3: [" | ", " "], 4: [" | ", " "], 5: [" | ", " "], 6: [" | ", " "], 7: [" | ", " "], 8: [" | ", " "], 9: [" | ", " "], 10: [" | | ", " "]}
     nextShotNumber = 1
-    currentTotalScore = 0
     tabulate.PRESERVE_WHITESPACE = True
     displayBoard(entireScoreBoard)
     while(latestKeyPressRetriever["keyPressName"] != "esc"):
 
         # Check if key has been pressed, only update the board if input is valid
         if(latestKeyPressRetriever["keyJustPressed"]):
-            if(validateKeyPress(latestKeyPressRetriever["keyPressName"])):
-                if(shouldRestart(latestKeyPressRetriever["keyPressName"])):
-                    entireScoreBoard, nextShotNumber, currentTotalScore = restartGame()
+            latestKeyPress = validateKeyPress(latestKeyPressRetriever["keyPressName"])
+            if(latestKeyPress != None):
+                if(latestKeyPress == "R"):  # Restart the game if R is typed
+                    entireScoreBoard, nextShotNumber = restartGame()
                     displayBoard(entireScoreBoard)
                 else:
-                    updateScoreBoard(latestKeyPressRetriever["keyPressName"], entireScoreBoard, nextShotNumber)
+                    updateScoreBoard(latestKeyPress, entireScoreBoard, nextShotNumber)
+                    if(latestKeyPress == "X"):    # Skip next shot if there's a strike
+                        nextShotNumber+=1
                     nextShotNumber+=1
                     displayBoard(entireScoreBoard)
             
             latestKeyPressRetriever["keyJustPressed"] = False
-        time.sleep(0.01) # No reason to run the while loop as fast as possible
+        time.sleep(0.01) # No reason to run the while loop any faster
         
     displayBoard(entireScoreBoard)
     print("Thanks for playing!")
