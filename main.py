@@ -53,6 +53,13 @@ def updateFrameString(oldScoreString, newValue, newValueIndex):
     newString = "".join(tempString)
     return newString
 
+# Gets total score from previous frame than passed in
+def getPreviousTotalScore(entireScoreBoard, frameNumber):
+    if(frameNumber > 1):
+        return entireScoreBoard[frameNumber-1][1]
+    else:
+        return 0
+
 
 # Add previous frame score to current frame
 def updateCurrentFrameScore(entireScoreBoard, frameNumber):
@@ -60,29 +67,83 @@ def updateCurrentFrameScore(entireScoreBoard, frameNumber):
         priorTotalScore = entireScoreBoard[frameNumber-1][1]
     else:
         priorTotalScore = 0
+    # priorTotalScore = 0
 
-    currentFrameScore = evaluateFrameScore(entireScoreBoard[frameNumber][0])
-    
-    entireScoreBoard[frameNumber][1] = currentFrameScore + priorTotalScore
+    currentFrameScore = evaluateFrameScore(entireScoreBoard, frameNumber)
+    # if(currentFrameScore != " " and priorTotalScore != " "):
+    #     entireScoreBoard[frameNumber][1] = currentFrameScore + priorTotalScore
 
+# 
+def evaluatePastFrameScore(entireScoreBoard, frameNumber):
+
+    if(frameNumber-2 > 0):
+        if(entireScoreBoard[frameNumber-2][1] == " "):
+            # evaluatePastFrameScore(entireScoreBoard, frameNumber-1)
+            if(entireScoreBoard[frameNumber-2][0][0] == "X"):
+                if(entireScoreBoard[frameNumber-1][0][0] != "X"):
+                    firstShot = entireScoreBoard[frameNumber-1][0][0]
+                    secondShot = entireScoreBoard[frameNumber-1][0][-1]
+                    if(secondShot != " "):
+                        if(secondShot == "/"):
+                            entireScoreBoard[frameNumber-2][1] = 10 + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
+                        else:
+                            entireScoreBoard[frameNumber-2][1] = int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
+                else: #strike on first hit after getting a strike, get second shot from current frame
+                    firstShotCurrentFrame = entireScoreBoard[frameNumber][0][0]
+                    if(firstShotCurrentFrame == "X"):
+                        entireScoreBoard[frameNumber-2][1] = 30 + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
+                    else:
+                        entireScoreBoard[frameNumber-2][1] = 20 + int(firstShotCurrentFrame) + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
+
+    if(frameNumber-1 > 0):
+        if(entireScoreBoard[frameNumber-1][1] == " "):
+            # evaluatePastFrameScore(entireScoreBoard, frameNumber-1)
+            if(entireScoreBoard[frameNumber-1][0][0] == "X"):
+                firstShot = entireScoreBoard[frameNumber][0][0]
+                secondShot = entireScoreBoard[frameNumber][0][-1]
+                if(secondShot != " " and firstShot != "X"):
+                    if(secondShot == "/"):
+                        entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                    else:
+                        entireScoreBoard[frameNumber-1][1] = 10 + int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+            if(entireScoreBoard[frameNumber-1][0][-1] == "/"):
+                firstShot = entireScoreBoard[frameNumber][0][0]
+                # secondShot = entireScoreBoard[frameNumber][0][-1]
+                if(firstShot == "X"):
+                    entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                else:
+                    entireScoreBoard[frameNumber-1][1] = 10 + int(firstShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+
+    if(getPreviousTotalScore(entireScoreBoard, frameNumber) != " "):
+        if(frameNumber > 1):
+            priorTotalScore = entireScoreBoard[frameNumber-1][1]
+        else:
+            priorTotalScore = 0
+        # currentFrameScore = evaluateFrameScore(entireScoreBoard, frameNumber)
+        firstShot = entireScoreBoard[frameNumber][0][0]
+        secondShot = entireScoreBoard[frameNumber][0][-1]
+        if(firstShot != "X" and secondShot != "/" and secondShot != " "):
+            entireScoreBoard[frameNumber][1] = int(firstShot) + int(secondShot) + priorTotalScore
 
 # Evaluate current frame score
-def evaluateFrameScore(frameShotString):
-    firstShot = frameShotString[0]
-    secondShot = frameShotString[-1]
-    if(firstShot == "X"):
-        return 10
-    elif(secondShot == "/"):
-        return 10
-    else:
-        return int(firstShot) + int(secondShot)
+def evaluateFrameScore(entireScoreBoard, frameNumber):
+    firstShot = entireScoreBoard[frameNumber][0][0]
+    secondShot = entireScoreBoard[frameNumber][0][-1]
+    evaluatePastFrameScore(entireScoreBoard, frameNumber)
+    if(secondShot != " "):
+        if(firstShot == "X"):
+            return " "
+        elif(secondShot == "/"):
+            return " "
+        else:
+            return int(firstShot) + int(secondShot)
 
 
 # Update score after the first shot in the frame
 def firstFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
     if(currentShotScore == "X"):
         updateFrameShot("_", entireScoreBoard, nextShotNumber+1, frameNumber)
-        updateCurrentFrameScore(entireScoreBoard, frameNumber)
+    updateCurrentFrameScore(entireScoreBoard, frameNumber)
     
 
 # Update score after the second shot in the frame
