@@ -89,19 +89,9 @@ def getShotForFrame(entireScoreBoard, frameNumber):
 def evaluatePastFrameScore(entireScoreBoard, frameNumber):
 
     if(frameNumber-2 > 0):
-        if(entireScoreBoard[frameNumber-2][1] == " "):
-            # evaluatePastFrameScore(entireScoreBoard, frameNumber-1)
-            if(entireScoreBoard[frameNumber-2][0][0] == "X"):
-                if(entireScoreBoard[frameNumber-1][0][0] != "X"):
-                    firstShot = entireScoreBoard[frameNumber-1][0][0]
-                    secondShot = entireScoreBoard[frameNumber-1][0][-1]
-                    # firstShot, secondShot, thirdShot = getShotForFrame(entireScoreBoard, frameNumber)
-                    if(secondShot != " "):
-                        if(secondShot == "/"):
-                            entireScoreBoard[frameNumber-2][1] = 10 + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
-                        else:
-                            entireScoreBoard[frameNumber-2][1] = int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
-                else: #strike on first hit after getting a strike, get second shot from current frame
+        # if(entireScoreBoard[frameNumber-2][1] == " "):
+        if(entireScoreBoard[frameNumber-2][0][0] == "X"):
+                if(entireScoreBoard[frameNumber-1][0][0] == "X"): #strike on first hit after getting a strike, get second shot from current frame
                     firstShotCurrentFrame = entireScoreBoard[frameNumber][0][0]
                     if(firstShotCurrentFrame == "X"):
                         entireScoreBoard[frameNumber-2][1] = 30 + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
@@ -109,16 +99,34 @@ def evaluatePastFrameScore(entireScoreBoard, frameNumber):
                         entireScoreBoard[frameNumber-2][1] = 20 + int(firstShotCurrentFrame) + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
 
     if(frameNumber-1 > 0):
-        if(entireScoreBoard[frameNumber-1][1] == " "):
+        if(entireScoreBoard[frameNumber-1][0][-1] == "/" or entireScoreBoard[frameNumber-1][0][0] == "X"):
             # evaluatePastFrameScore(entireScoreBoard, frameNumber-1)
             if(entireScoreBoard[frameNumber-1][0][0] == "X"):
-                firstShot = entireScoreBoard[frameNumber][0][0]
-                secondShot = entireScoreBoard[frameNumber][0][-1]
-                if(secondShot != " " and firstShot != "X"):
-                    if(secondShot == "/"):
-                        entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                # firstShot = entireScoreBoard[frameNumber][0][0]
+                # secondShot = entireScoreBoard[frameNumber][0][-1]
+                firstShot, secondShot, thirdShot = getShotForFrame(entireScoreBoard, frameNumber)
+                if(frameNumber != 10):
+                    if(firstShot != "X"):
+                        if(secondShot == "/"):
+                            entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                        elif(secondShot != " "):
+                            entireScoreBoard[frameNumber-1][1] = 10 + int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                        else:
+                            entireScoreBoard[frameNumber-1][1] = 10 + int(firstShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
                     else:
-                        entireScoreBoard[frameNumber-1][1] = 10 + int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                        entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                else: # frame 9 when scoring on frame 10
+                    if(firstShot != "X"):
+                        if(secondShot == "/"):
+                            entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                        else:
+                            entireScoreBoard[frameNumber-1][1] = 10 + int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                    else:
+                        if(secondShot == "X"):
+                            entireScoreBoard[frameNumber-1][1] = 30 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+                        else:
+                            entireScoreBoard[frameNumber-1][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber-1)
+
             if(entireScoreBoard[frameNumber-1][0][-1] == "/"):
                 firstShot = entireScoreBoard[frameNumber][0][0]
                 # secondShot = entireScoreBoard[frameNumber][0][-1]
@@ -133,19 +141,72 @@ def evaluatePastFrameScore(entireScoreBoard, frameNumber):
         else:
             priorTotalScore = 0
         # currentFrameScore = evaluateFrameScore(entireScoreBoard, frameNumber)
-        firstShot = entireScoreBoard[frameNumber][0][0]
-        secondShot = entireScoreBoard[frameNumber][0][-1]
+        # firstShot = entireScoreBoard[frameNumber][0][0]
+        # secondShot = entireScoreBoard[frameNumber][0][-1]
+        firstShot, secondShot, thirdShot = getShotForFrame(entireScoreBoard, frameNumber)
         if(frameNumber != 10):
-            if(firstShot != "X" and secondShot != "/" and secondShot != " "):
-                entireScoreBoard[frameNumber][1] = int(firstShot) + int(secondShot) + priorTotalScore
-        else:
+            if(firstShot != "X" and secondShot != "/"):
+                if(secondShot != " "):
+                    entireScoreBoard[frameNumber][1] = int(firstShot) + int(secondShot) + priorTotalScore
+                else:
+                    entireScoreBoard[frameNumber][1] = int(firstShot) + priorTotalScore
+            else: # strike of spare occurred before frame 10
+                entireScoreBoard[frameNumber][1] = 10 + priorTotalScore
+            
+        else: # update score on frame 10
             firstShot, secondShot, thirdShot = getShotForFrame(entireScoreBoard, frameNumber)
-            if(firstShot != "X" and secondShot != "/" and secondShot != " "):
-                entireScoreBoard[frameNumber][1] = int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber)
-            # if(entireScoreBoard[frameNumber][1] != " "):
-                #look at three last shots in frame 10, add scores correctly
+            frameShot1 = frameShot2 = frameShot3 = 0
+            
+            if(firstShot != " "):
+                if(firstShot == "X"):
+                    frameShot1 = 10
+                else:
+                    frameShot1 = int(firstShot)
+
+            if(secondShot != " "):
+                if(secondShot == "/"):
+                    frameShot2 = 10 - frameShot1
+                if(secondShot == "X"):
+                    frameShot2 = 10
+                else:
+                    frameShot2 = int(secondShot)
+
+            if(thirdShot != " "):
+                if(thirdShot == "/"):
+                    frameShot3 = 10 - frameShot2
+                if(thirdShot == "X"):
+                    frameShot3 = 10
+                else:
+                    frameShot3 = int(thirdShot)
+
+            totalFrameShot = frameShot1 + frameShot2 + frameShot3
+            entireScoreBoard[frameNumber][1] = totalFrameShot + getPreviousTotalScore(entireScoreBoard, frameNumber)
 
 
+
+            # if(firstShot != "X" and secondShot != "/"):
+            #     if(secondShot != " "):
+            #         entireScoreBoard[frameNumber][1] = int(firstShot) + int(secondShot) + getPreviousTotalScore(entireScoreBoard, frameNumber)
+            #     else:
+            #         entireScoreBoard[frameNumber][1] = int(firstShot) + getPreviousTotalScore(entireScoreBoard, frameNumber)
+
+            # if(thirdShot != " "):
+            #     if(secondShot == "/"):
+            #         if(thirdShot != "X"):
+            #             entireScoreBoard[frameNumber][1] = 10 + int(thirdShot) + getPreviousTotalScore(entireScoreBoard, frameNumber)
+            #         else:
+            #             entireScoreBoard[frameNumber][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber)
+            #     if(firstShot == "X"):
+            #         if(secondShot != "X"):
+            #             if(thirdShot != "/"):
+            #                 entireScoreBoard[frameNumber][1] = 10 + int(secondShot) + int(thirdShot) + getPreviousTotalScore(entireScoreBoard, frameNumber)
+            #             else:
+            #                 entireScoreBoard[frameNumber][1] = 20 + getPreviousTotalScore(entireScoreBoard, frameNumber)
+            #         else:
+            #             if(thirdShot != "X"):
+            #                 entireScoreBoard[frameNumber][1] = 20 + int(thirdShot) + getPreviousTotalScore(entireScoreBoard, frameNumber)
+            #             else:
+            #                 entireScoreBoard[frameNumber][1] = 30 + getPreviousTotalScore(entireScoreBoard, frameNumber)
 
 
 
@@ -154,19 +215,20 @@ def evaluateFrameScore(entireScoreBoard, frameNumber):
     firstShot = entireScoreBoard[frameNumber][0][0]
     secondShot = entireScoreBoard[frameNumber][0][-1]
     evaluatePastFrameScore(entireScoreBoard, frameNumber)
-    if(secondShot != " "):
-        if(firstShot == "X"):
-            return " "
-        elif(secondShot == "/"):
-            return " "
-        else:
-            return int(firstShot) + int(secondShot)
+    # if(secondShot != " "):
+    #     if(firstShot == "X"):
+    #         return " "
+    #     elif(secondShot == "/"):
+    #         return " "
+    #     else:
+    #         return int(firstShot) + int(secondShot)
 
 
 # Update score after the first shot in the frame
 def firstFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber):
     if(currentShotScore == "X"):
-        updateFrameShot("_", entireScoreBoard, nextShotNumber+1, frameNumber)
+        if(frameNumber != 10):
+            updateFrameShot("_", entireScoreBoard, nextShotNumber+1, frameNumber)
     updateCurrentFrameScore(entireScoreBoard, frameNumber)
     
 
@@ -198,10 +260,18 @@ def restartGame():
     newNextShotNumber = 1
     return newScoreBoard, newNextShotNumber
 
+# Check final frame box for score
+def isGameOver(entireScoreBoard):
+    firstShot, secondShot, thirdShot = getShotForFrame(entireScoreBoard, 10)
+    if((secondShot.isdigit() and firstShot != "X") or thirdShot != " "):
+        return True
+    else:
+        return False
+
 
 # Clears the previous board and displays the updated one
 def displayBoard(entireScoreBoard):
-    os.system('clear')
+    os.system('cls')
     print(tabulate(entireScoreBoard, headers="keys", tablefmt="fancy_grid", stralign="center"))
     print("\n\t'R' - Restart\t\t\t'ESC' - Quit")
 
@@ -217,7 +287,7 @@ def main():
 
     tabulate.PRESERVE_WHITESPACE = True
     displayBoard(entireScoreBoard)
-    while(latestKeyPressRetriever["keyPressName"] != "esc"):
+    while(latestKeyPressRetriever["keyPressName"] != "esc" and not isGameOver(entireScoreBoard)):
 
         # Check if key has been pressed, only update the board if input is valid
         if(latestKeyPressRetriever["keyJustPressed"]):
@@ -229,7 +299,9 @@ def main():
                 else:
                     updateScoreBoard(latestKeyPress, entireScoreBoard, nextShotNumber)
                     if(latestKeyPress == "X"):    # Skip next shot if there's a strike
-                        nextShotNumber+=1
+                        frameNumber = getFrameNumber(nextShotNumber)
+                        if(frameNumber != 10):
+                            nextShotNumber+=1
                     nextShotNumber+=1
                     displayBoard(entireScoreBoard)
             
@@ -238,7 +310,7 @@ def main():
         
     displayBoard(entireScoreBoard)
     print("Thanks for playing!")
-
+    keyboard.send("esc") # esc clears the text written in command line
 
 if __name__ == "__main__":
     main()
