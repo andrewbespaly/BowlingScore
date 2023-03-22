@@ -3,6 +3,7 @@
 
  Open command prompt in folder location  
  Run python main.py  
+ May need to pip install tabulate and keyboard  
  
  0-9 to enter number of pins hit at each shot  
  '/' for a spare  
