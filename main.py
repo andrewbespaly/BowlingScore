@@ -157,12 +157,7 @@ def evaluatePastFrameScore(entireScoreBoard, frameNumber):
         if(twoPrevFramesFirstShot == "X"):
             prevFirstShot = getShotForFrame(entireScoreBoard[frameNumber-1], frameNumber-1)[0]
             if(prevFirstShot == "X"):
-                currentFirstShot, currentSecondShot, currentThirdShot = getShotForFrame(entireScoreBoard[frameNumber], frameNumber)
                 frameShot1Score = calculateCurrentFrame(entireScoreBoard[frameNumber], frameNumber)[0]
-                # if(currentFirstShot == "X" and currentSecondShot != "X"):
-                #     totalFrameShot = frameShot1Score + frameShot2Score
-                # else:
-                #     totalFrameShot = frameShot1Score
 
                 entireScoreBoard[frameNumber-2][1] = 20 + frameShot1Score + getPreviousTotalScore(entireScoreBoard, frameNumber-2)
 
@@ -200,9 +195,7 @@ def updateTotalScore(entireScoreBoard, nextShotNumber, frameNumber):
 # Add next shot taken onto the scoreboard in the latest shot position
 def updateScoreBoard(currentShotScore, entireScoreBoard, nextShotNumber):
     frameNumber = getFrameNumber(nextShotNumber)
-    
     updateFrameShot(currentShotScore, entireScoreBoard, nextShotNumber, frameNumber)
-
     updateTotalScore(entireScoreBoard, nextShotNumber, frameNumber)
 
     
@@ -237,6 +230,7 @@ def main():
 
     tabulate.PRESERVE_WHITESPACE = True
     displayBoard(entireScoreBoard)
+    # main game loop
     while(latestKeyPressRetriever["keyPressName"] != "esc" and not isGameOver(entireScoreBoard)):
 
         # Check if key has been pressed, only update the board if input is valid
